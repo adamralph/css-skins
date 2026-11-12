@@ -1,0 +1,829 @@
+/* GoatCounter — a calm, document-style skin.
+ *
+ * The stock site is a 2010s marketing page: yellow highlighter under headings,
+ * a drop shadow on every box, centred body text, ten equal-weight cards in the
+ * features grid, and a yellow footer with pipe separators. Removing the yellow
+ * and the shadows is not enough, because the layout is the problem.
+ *
+ * What this does instead:
+ *
+ *   - one white sheet on a near-white backdrop, separated by a hairline rather
+ *     than a shadow
+ *   - everything left-aligned, with prose held to a readable measure and the
+ *     card and screenshot areas allowed to run wider
+ *   - a small, tight type scale: headings lose their rules and their 5rem gaps
+ *   - one accent colour, used for links and for the single primary action
+ *   - separation by space and hairline rules, never by depth
+ *   - the ten feature cards become a two-column grid of hairline rows
+ *   - the docs and pricing blocks stop being cards nested inside a card
+ *
+ * GoatCounter themes itself through custom properties on :root, so the palette
+ * section carries most of the work. Everything after it is layout that the
+ * variables cannot express. The guard covers the marketing site and the
+ * dashboard subdomains, so the product stays consistent with its own website.
+ *
+ * The dashboard is treated separately, further down: its chrome is the design,
+ * so the nav, the control bar and the widget grid each get a shape of their own.
+ */
+
+@-moz-document domain("goatcounter.com") {
+
+  /* ---------------------------------------------------------------- palette
+   *
+   * html:root beats the plain :root rule in vars.css regardless of load order.
+   */
+
+  html:root {
+    --text:              #1f1f24;
+    --bg:                #fff;
+    --header-border:     #ededf2;
+    --backdrop:          #fafafb;
+    --target-bg:         #fdf2c9;
+    --loading-text:      #777;
+
+    --link:              #9a15a4;      /* The site's own purple, ~7:1 on white. */
+    --link-hover:        #6d0f75;
+
+    --input-text:        #1f1f24;
+    --input-bg:          #fff;
+    --input-border:      #d6d6de;
+    --input-focus:       #9a15a4;
+    --fieldset-border:   #e2e2e8;
+    --form-error-text:   #c02626;
+    --input-error-border: #c02626;
+
+    --btn-text:          #1f1f24;
+    --btn-bg:            #fff;         /* Solid, so buttons lose the 3D gradient. */
+    --btn-border:        #d6d6de;
+    --btn-border-outset: #d6d6de;
+    --btn-hover-bg:      #f5f4f7;
+    --btn-active-bg:     #ececef;
+
+    --code-text:         #1f1f24;
+    --code-bg:           #fafafb;
+    --code-border:       #e6e6ec;
+
+    --tooltip-text:      #1f1f24;
+    --tooltip-bg:        #fff;
+    --tooltip-border:    #e6e6ec;
+    --tooltip-shadow:    transparent;
+
+    --chart-line:        #9a15a4;
+    --chart-fill:        #f7ecf8;
+    --chart-grid:        #ececf0;
+    --hchart-border:     #c78fcd;
+    --hchart-bar:        #e6cbea;
+    --hchart-bar-hover:  #f1ddf4;
+
+    --nav-bg:            #fafafb;      /* Was yellow; a neutral tint instead. */
+    --nav-border:        #ededf2;
+    --footer-shadow:     transparent;
+    --filter-kw-text:    #9a15a4;
+
+    --info-bg:           #f0f7fc;
+    --info-border:       #c3dcef;
+    --error-bg:          #fdf1f1;
+    --error-border:      #e0a3a3;
+
+    --event-bg:          #f5eef7;
+    --pageviews-text:    #7a7a82;
+
+    --datepicker-border:            #e2e2e8;
+    --datepicker-shadow:            transparent;
+    --datepicker-dayname-text:      #8a8a94;
+    --datepicker-day-text:          #4a4a55;
+    --datepicker-day-bg:            #fafafb;
+    --datepicker-day-hover-bg:      #9a15a4;
+    --datepicker-today-text:        #9a15a4;
+    --datepicker-selected-shadow:   #6d0f75;
+    --datepicker-selected-text:     #9a15a4;
+    --datepicker-future-text:       #8a8a94;
+    --datepicker-future-bg:         #f5f5f8;
+    --datepicker-outside-month-text: #8a8a94;
+
+    --text-table-even-bg: #fbfbfc;
+    --text-table-border:  #ededf2;
+    --text-table-rank-text: #5b5b66;
+
+    --widget-border:          #ededf2;
+    --widget-dragging-border: #9a15a4;
+    --widget-dragging-bg:     #faf6fb;
+    --widget-handle-bg:       #f5f4f7;
+    --widget-handle-text:     #5b5b66;
+    --widget-handle-hover-bg: #ececef;
+
+    --box-bg:            #fafafb;
+    --box-shadow:        transparent;
+
+    /* Direction of change, measured against white at the dashboard's .9rem
+     * figure size, where AA asks for 4.5:1.
+     *
+     * The stock --minus of #ac3ad3 is 4.88:1 and sits close to the purple
+     * accent, so a decrease reads like a link. #c02626 is 5.92:1 and reads
+     * unmistakably as a decrease. The stock --plus of #008837 is 4.59:1,
+     * passing by 2%, so it is deepened to 5.43:1. */
+    --plus:              #0a7a3d;
+    --minus:             #c02626;
+
+    /* Not used by the site. Three names for values this skin repeats often. */
+    --hairline:          #ededf2;
+    --muted:             #5b5b66;
+    --body-text:         #3a3a45;
+  }
+
+  /* ------------------------------------------------------------------- type
+   *
+   * The stock scale is 1.7em for h1 and 1.5em for h2, both centred, with a
+   * rule under every h2. Smaller and tighter reads calmer, and the rules are
+   * replaced by space.
+   */
+
+  html {
+    line-height: 1.6;
+  }
+
+  h1 {
+    text-align: left;
+    font-size: 1.6rem;
+    letter-spacing: -.02em;
+    padding: 0;
+    margin: 0 0 1.5rem;
+  }
+
+  h2 {
+    font-size: 1.2rem;
+    letter-spacing: -.01em;
+    border-bottom: 0;
+    padding: 0;
+    margin: 2.5rem 0 .75rem;
+  }
+
+  h3,
+  h4,
+  h5,
+  h6 {
+    letter-spacing: -.01em;
+  }
+
+  p {
+    margin: 0 0 1rem;
+  }
+
+  a {
+    text-underline-offset: 2px;
+  }
+
+  /* ------------------------------------------------------------------ shell
+   *
+   * A white sheet on a near-white backdrop. The hairline does the work that the
+   * drop shadow used to, so the page still reads as bounded.
+   */
+
+  .page {
+    max-width: 52rem;
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    box-shadow: none;
+  }
+
+  /* Navs and other .center blocks follow the page width, except the footer,
+   * which is set to match the wider home sheet below. */
+  .center {
+    max-width: 52rem;
+  }
+
+  .page-home {
+    max-width: 68rem;
+    padding: 2rem 2.5rem 2.5rem;
+    background-color: var(--bg);
+    box-shadow: none;
+  }
+
+  /* The docs and pricing blocks are .page divs nested inside the home page, so
+   * without this they render as cards inside a card, at a narrower width. */
+  .page-home .page {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  /* The site's own narrow-screen rule reduces .page padding, but .page-home
+   * overrides it, so the padding is restated here at a size that fits a phone. */
+  @media (max-width: 54em) {
+    .page-home {
+      padding: 1.5rem 1.25rem;
+    }
+
+    footer.center {
+      padding: 1.25rem 1.25rem 2rem;
+    }
+  }
+
+  /* -------------------------------------------------------------- home: top */
+
+  #home-top {
+    padding: 0;
+    margin: 0 0 2.5rem;
+  }
+
+  #home-top h1 {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    font-size: 1.4rem;
+    margin: 0 0 2.5rem;
+  }
+
+  #home-top h1 img {
+    height: 1.8rem;
+    width: auto;
+  }
+
+  /* The tagline. It was a centred 1.8em block with a yellow marker under two
+   * words; now it is left-aligned and the two words carry the accent. */
+  #home-intro {
+    text-align: left;
+    max-width: 44rem;
+    margin: 0 0 2rem;
+  }
+
+  #home-intro strong {
+    display: block;
+    font-size: 1.65rem;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -.018em;
+    margin: 0 0 1rem;
+  }
+
+  #home-intro em {
+    font-style: normal;
+    color: var(--link);
+    box-shadow: none;
+  }
+
+  #home-intro p {
+    text-align: left;
+    margin: 0;
+    color: var(--body-text);
+  }
+
+  #home-intro a {
+    font-size: inherit;
+    margin: 0;
+  }
+
+  /* The signup box becomes the one filled button on the page. Its icon is
+   * decorative and unreadable at this size, so it is dropped. */
+  #home-login {
+    text-align: left;
+    margin: 0 0 3rem;
+  }
+
+  #home-login .cbox {
+    display: inline-flex;
+    align-items: center;
+    padding: .6rem 1.1rem;
+    border: 1px solid var(--link);
+    border-radius: 6px;
+    background-color: var(--link);
+    color: #fff;
+    font-size: .95rem;
+    font-weight: 600;
+    box-shadow: none;
+  }
+
+  #home-login .cbox:hover {
+    background-color: var(--link-hover);
+    border-color: var(--link-hover);
+    color: #fff;
+    text-decoration: none;
+  }
+
+  #home-login .cbox img {
+    display: none;
+  }
+
+  #home-login p {
+    margin: .8rem 0 0;
+    font-size: .875rem;
+    color: var(--muted);
+    text-align: left;
+  }
+
+  /* -------------------------------------------------------- home: screenshots
+   *
+   * Three equal columns made every screenshot about 320px wide, which is too
+   * small to read. The main dashboard now runs the full width as a hero, with
+   * the other two paired beneath it, and "Live demo" becomes the secondary
+   * action so the page has one filled button and one outlined one.
+   */
+
+  #home-screens {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem 1.25rem;
+    margin: 0 0 .5rem;
+    text-align: left;
+  }
+
+  #home-screens p {
+    grid-column: 1 / -1;
+    width: auto;
+    margin: 0;
+    font-weight: 600;
+  }
+
+  #home-screens p a {
+    display: inline-block;
+    padding: .4rem .9rem;
+    border: 1px solid var(--link);
+    border-radius: 6px;
+    font-size: .875rem;
+    font-weight: 600;
+    color: var(--link);
+    transition: none;
+  }
+
+  #home-screens p a:hover {
+    background-color: #faf6fb;
+    border-color: var(--link-hover);
+    color: var(--link-hover);
+    text-decoration: none;
+  }
+
+  #home-screens figure {
+    margin: 0;
+    width: auto;
+  }
+
+  #home-screens figure:first-of-type {
+    grid-column: 1 / -1;
+  }
+
+  #home-screens figcaption {
+    text-align: left;
+    font-size: .8rem;
+    font-weight: 400;
+    color: var(--muted);
+    margin: 0 0 .45rem;
+  }
+
+  #home-screens img {
+    display: block;
+    width: 100%;
+    border: 1px solid #e6e6ec;
+    border-radius: 6px;
+    box-shadow: none;
+  }
+
+  @media (max-width: 45rem) {
+    #home-screens {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* ----------------------------------------------------------- home: features
+   *
+   * Ten shadowed cards of equal weight become five hairline rows of two
+   * columns. The integration row, which holds the script tag, spans the full
+   * width so the code does not have to wrap in half a column.
+   */
+
+  #home-features div {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 2.5rem;
+    padding: 1.25rem 0;
+    border-top: 1px solid var(--hairline);
+  }
+
+  #home-features div:first-child {
+    border-top: 0;
+    padding-top: 0;
+  }
+
+  #home-features div:last-child {
+    grid-template-columns: 1fr;
+    padding-bottom: 0;
+  }
+
+  #home-features p {
+    width: auto;
+    margin: 0;
+    padding: 0;
+    background: none;
+    box-shadow: none;
+    font-size: .95rem;
+    color: var(--body-text);
+  }
+
+  #home-features strong {
+    box-shadow: none;
+    color: var(--text);
+  }
+
+  #home-features code {
+    display: block;
+    margin: .6rem 0;
+    padding: .7rem .9rem;
+    font-size: .8rem;
+    white-space: pre;
+    overflow-x: auto;
+    background-color: var(--code-bg);
+    border: 1px solid var(--code-border);
+    border-radius: 6px;
+  }
+
+  @media (max-width: 45rem) {
+    #home-features div {
+      grid-template-columns: 1fr;
+      gap: .75rem;
+    }
+  }
+
+  /* --------------------------------------------------- home: docs and pricing */
+
+  #docs-list {
+    text-align: left;
+  }
+
+  #docs-list ul {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .4rem 2rem;
+    height: auto;
+    margin: 0;
+    padding: 0;
+  }
+
+  #docs-list li {
+    margin: 0;
+  }
+
+  @media (max-width: 45rem) {
+    #docs-list ul {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .page-home > .page p {
+    max-width: 46rem;
+    color: var(--body-text);
+  }
+
+  .page-home h2 {
+    text-align: left;
+    font-size: 1.2rem;
+    margin-top: 3rem;
+  }
+
+  .page-home hr {
+    margin: 2.5rem 0 0;
+    opacity: .3;
+  }
+
+  /* ----------------------------------------------------------------- footer
+   *
+   * A yellow box with pipe separators becomes a quiet rule with muted links,
+   * aligned to the same column as the sheet above it.
+   */
+
+  footer {
+    text-align: left;
+    font-size: .85rem;
+    line-height: 2;
+  }
+
+  /* Follows the document width by default, so it lines up with the page above
+   * it on the dashboard and the prose pages. */
+  footer.center {
+    max-width: 52rem;
+    margin: 0 auto;
+    padding: 1.5rem 4rem 3rem;
+  }
+
+  /* The home page uses a wider sheet, so its footer follows that instead. */
+  body > .page-home ~ footer.center {
+    max-width: 68rem;
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+
+  /* Backend pages give .page a 1em padding, so the footer matches that rather
+   * than the 4rem used on the marketing pages. */
+  body[id] footer.center {
+    padding-left: 1em;
+    padding-right: 1em;
+  }
+
+  footer.cbox {
+    background: none;
+    box-shadow: none;
+  }
+
+  /* The dashboard makes the footer a flex row with space-between, which pushes
+   * the two link groups apart and wraps them awkwardly. Let them flow as text. */
+  body[id] footer {
+    display: block;
+  }
+
+  footer a {
+    color: var(--muted);
+    font-weight: 400;
+    margin: 0 1.25rem 0 0;
+  }
+
+  footer a:hover {
+    color: var(--link);
+  }
+
+  footer span {
+    display: none;
+  }
+
+  @media (max-width: 44em) {
+    footer > div:first-child {
+      border-bottom-color: var(--hairline);
+    }
+  }
+
+  /* -------------------------------------------------------------- dashboard
+   *
+   * The dashboard is all chrome: a nav, a toolbar of controls, and a grid of
+   * widgets. The stock version packs the controls into three rows of small text
+   * separated by middots, gives every widget the same undifferentiated weight,
+   * and lets the flash message bleed across the sheet. This gives the toolbar
+   * one clear shape and every widget a card.
+   */
+
+  nav.center {
+    padding: .9rem 1em .7rem;
+    border-bottom: 1px solid var(--hairline);
+    font-size: .85rem;
+    color: var(--muted);
+  }
+
+  nav a {
+    color: var(--text);
+  }
+
+  nav a:hover {
+    color: var(--link);
+  }
+
+  /* "Sign out" is a button, so it does not pick up the nav link colour. */
+  nav .link {
+    color: var(--text);
+  }
+
+  nav .link:hover {
+    color: var(--link);
+  }
+
+  /* The toolbar bleeds to the edges of the sheet, so it reads as a bar rather
+   * than as text floating in the page. */
+  #dash-form {
+    margin: 0 -1em 1.25rem;
+    padding: 0;
+  }
+
+  #dash-main {
+    padding: .7em 1em;
+    background-color: var(--nav-bg);
+    border-bottom: 1px solid var(--hairline);
+    border-radius: 0;
+    font-size: .9rem;
+  }
+
+  #dash-main .date-input {
+    padding: .3em .4em;
+    border: 1px solid var(--input-border);
+    border-radius: 4px;
+    font-size: .9rem;
+  }
+
+  #dash-move {
+    margin: 0;
+    padding: .55em 1em;
+    border-bottom: 1px solid var(--hairline);
+    align-items: center;
+  }
+
+  /* Middots are text nodes, so they cannot be selected. Colouring the container
+   * mutes the separators and labels; the buttons keep the accent colour. */
+  #dash-select-period > span,
+  #dash-select-group,
+  #dash-move {
+    color: #9a9aa4;
+  }
+
+  #dash-select-period button,
+  #dash-select-group button,
+  #dash-move button {
+    padding: .05em .1em;
+    color: var(--link);
+  }
+
+  #dash-select-period button:hover,
+  #dash-select-group button:hover,
+  #dash-move button:hover {
+    color: var(--link-hover);
+  }
+
+  /* The current period and grouping are marked by a class on the container, so
+   * the active button can be emphasised without any script. */
+  #dash-select-period.period-day button[value="day"],
+  #dash-select-period.period-week button[value="week"],
+  #dash-select-period.period-month button[value="month"],
+  #dash-select-period.period-quarter button[value="quarter"],
+  #dash-select-period.period-year button[value="year"],
+  #dash-select-group.group-hour button[value="hour"],
+  #dash-select-group.group-day button[value="day"] {
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  #dash-timerange {
+    margin: 0;
+    padding: .1em .7em;
+    background-color: var(--bg);
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    color: var(--text);
+    font-size: .85rem;
+  }
+
+  #dash-saved-views > span {
+    color: var(--muted);
+  }
+
+  /* Widgets become cards, and the horizontal chart widgets become a grid
+   * instead of two 49% columns pushed apart by space-between. */
+  #dash-widgets > div:not(.hcharts),
+  .hcharts > div {
+    padding: 1rem 1.15rem;
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+  }
+
+  #dash-widgets > div:not(.hcharts) {
+    margin: 0 0 1rem;
+  }
+
+  .hcharts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin: 0;
+  }
+
+  .hcharts > div {
+    width: auto;
+    margin: 0;
+  }
+
+  @media (max-width: 54rem) {
+    .hcharts {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  #dash-widgets h2 {
+    margin: 0 0 .7rem;
+    padding: 0;
+    border-bottom: 0;
+    font-size: .95rem;
+    letter-spacing: -.01em;
+  }
+
+  #dash-widgets h2 small {
+    color: var(--muted);
+    font-size: .8rem;
+    font-weight: 400;
+  }
+
+  .count-list td[colspan="3"] {
+    padding: .4rem 0;
+    color: var(--muted);
+  }
+
+  .count-list td[colspan="3"] em {
+    font-style: normal;
+  }
+
+  .hchart .not-collected,
+  .widget-loading {
+    color: var(--muted);
+    font-size: .85rem;
+    font-style: normal;
+    text-align: left;
+  }
+
+  /* The totals placeholder sits in a table cell, which centres it. */
+  #dash-widgets .chart {
+    text-align: left;
+  }
+
+  /* The "No data received" panel is the first thing a new account sees. It was
+   * a full-bleed centred box; now it reads as a note attached to the page. */
+  .flash {
+    margin: 0 0 1.25rem;
+    padding: 1.1rem 1.25rem;
+    text-align: left;
+    border: 1px solid var(--hairline);
+    border-left-width: 3px;
+    border-radius: 6px;
+  }
+
+  .flash.flash-i {
+    background-color: #f7f2f8;
+    border-left-color: var(--link);
+  }
+
+  .flash.flash-e {
+    background-color: var(--error-bg);
+    border-left-color: var(--error-border);
+  }
+
+  .flash p {
+    max-width: 60ch;
+    margin: 0 0 .6rem;
+  }
+
+  .flash p:last-child {
+    margin-bottom: 0;
+  }
+
+  .flash pre {
+    display: block;
+    margin: .8rem 0;
+    text-align: left;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  /* --------------------------------------------------------------- leftovers
+   *
+   * Hardcoded colours left in shared.css and style.css that the variables do
+   * not reach, plus the few panels outside the home page.
+   */
+
+  u {
+    box-shadow: none;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: .18em;
+    text-decoration-color: #d8d8de;
+  }
+
+  #signup-form,
+  .contact-form {
+    background-color: var(--box-bg);
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    box-shadow: none;
+  }
+
+  /* The form's primary action matches the one on the home page, so "Sign up"
+   * looks like the same button wherever it appears. */
+  #signup-form button[type="submit"],
+  .contact-form button:not(.link) {
+    padding: .6rem 1.1rem;
+    border: 1px solid var(--link);
+    border-radius: 6px;
+    background-color: var(--link);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  #signup-form button[type="submit"]:hover,
+  .contact-form button:not(.link):hover {
+    border-color: var(--link-hover);
+    background-color: var(--link-hover);
+  }
+
+  .imgzoom-large {
+    box-shadow: 0 0 0 1px #d6d6de;
+  }
+
+  tr {
+    border-bottom-color: var(--hairline);
+  }
+
+  tfoot tr:first-child {
+    border-top-color: var(--hairline);
+  }
+
+  h1 a,
+  h2 a,
+  h3 a,
+  h4 a,
+  h5 a,
+  h6 a {
+    color: #b0b0b8;
+  }
+}

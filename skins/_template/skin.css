@@ -1,0 +1,15 @@
+/* Skin for <site>.
+ *
+ * The guard limits the skin to <site> and its subdomains.
+ * Stylus applies the guard. Other tools that inject CSS directly do not,
+ * so preview with the rules only.
+ */
+
+@-moz-document domain("<site>") {
+  /* Add rules here.
+   *
+   * Keep selectors narrow, so a change to the site breaks one rule rather
+   * than the whole skin. Prefer a class or an attribute over a tag, and
+   * avoid selectors built from the site's generated class names.
+   */
+}
